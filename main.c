@@ -126,3 +126,55 @@ void *chef(void *arg){
     pthread_cond_signal(&finished);
     return NULL;
 }
+void *customer(void *arg){
+    int tableNum = 0;
+    int * supplied = (int*) arg;
+    if(*supplied == HAMBURGER){
+        tableNum = 0;
+    }
+    else if (*supplied == FRIES){
+        tableNum = 1;
+    }
+    else if (*supplied == SODA){
+        tableNum = 2;
+    }
+    table[tableNum] = *supplied;
+    while(consumed < ITERATIONS * 2){
+        pthread_mutex_lock(&lock);
+        while(servedF == 0){
+            pthread_cond_wait(&served, &lock);
+        }
+        while(scheduled & *supplied){
+            pthread_cond_wait(&scheduleClear, &lock);
+        }
+        scheduled |= *supplied;
+        if(table[tableNum] != (table[tableNum] | restaurantCounter.item1)){
+            if(restaurantCounter.item2 != *supplied){
+                table[tableNum] += restaurantCounter.item1;
+                restaurantCounter.item1 = EMPTY;
+            }
+        }
+        if(table[tableNum] != (table[tableNum] | restaurantCounter.item2)){
+            if(restaurantCounter.item1 != *supplied) {
+                table[tableNum] += restaurantCounter.item2;
+                restaurantCounter.item2 = EMPTY;
+            }
+        }
+        if(table[tableNum] == MEAL){
+            ++eatCount[tableNum];
+            table[tableNum] = *supplied;
+            scheduled = 0;
+            pthread_cond_signal(&scheduleClear);
+            consumed += 2;
+        }
+        if((restaurantCounter.item1 == EMPTY) && (restaurantCounter.item2 == EMPTY)){
+            bellF = 1;
+            servedF = 0;
+            scheduled = 0;
+            pthread_cond_signal(&scheduleClear);
+            pthread_cond_signal(&bell);
+        }
+        pthread_mutex_unlock(&lock);
+    }
+    return NULL;
+}
