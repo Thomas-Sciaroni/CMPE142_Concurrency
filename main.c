@@ -82,12 +82,13 @@ void *functionalSmell(void* arg){ //force the customers back into their control 
 
 void printStats(void){
     printf("Customer:\tMeals:\n");
-    printf("A:\t\t\t%d\n", eatCount[0]);
-    printf("B:\t\t\t%d\n", eatCount[1]);
-    printf("C:\t\t\t%d\n", eatCount[2]);
-    printf("Total Meals Eaten:\t\t%d\n", eatCount[0] + eatCount[1] + eatCount[2]);
+    printf("A:\t\t%d\n", eatCount[0]);
+    printf("B:\t\t%d\n", eatCount[1]);
+    printf("C:\t\t%d\n", eatCount[2]);
+    printf("Total Meals Eaten:\t%d\n", eatCount[0] + eatCount[1] + eatCount[2]);
     printf("Total Dishes Prepared:\t%d\n", produced);
 }
+
 void *chef(void *arg){
     int choice;
     srandom( (unsigned int) time(NULL) );
@@ -121,11 +122,12 @@ void *chef(void *arg){
         pthread_cond_signal(&served);
         pthread_mutex_unlock(&lock);
     }
-    sleep(1);
+    sleep(1); //give the customers a chance to eat the last served order
     finishedF = 1;
     pthread_cond_signal(&finished);
     return NULL;
 }
+
 void *customer(void *arg){
     int tableNum = 0;
     int * supplied = (int*) arg;
